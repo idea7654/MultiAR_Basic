@@ -1,9 +1,10 @@
 let map;
-let marker;
-const socket = io.connect("https://gamedata.pcu.ac.kr:49156");
+//let marker;
+const socket = io.connect("https://gamedata.pcu.ac.kr:49157");
 // const socket = io.connect("http://127.0.0.1:8500");
 let markers = [];
 let lines = [];
+let locals = [];
 let drawingManager = null;
 let sideMarker = null;
 
@@ -54,9 +55,29 @@ socket.on("sendMarkers", (data) => {
     }
   }
   for (let i = 0; i < data.length; i++) {
-    marker = new google.maps.Marker({
-      position: new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon),
-    }); //marker변수에 마커 객체를 할당하는건데
+    let marker;
+    if (data[i].id == socket.id) {
+      marker = new google.maps.Marker({
+        position: new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon),
+      }); //marker변수에 마커 객체를 할당하는건데
+    } else {
+      const newGPS = GPS2Local(data[i].gps);
+      if (i == 0) {
+        marker = new google.maps.Marker({
+          position: new google.maps.LatLng(
+            data[1].gps.lat + newGPS.z,
+            data[1].gps.lon + newGPS.x
+          ),
+        });
+      } else {
+        marker = new google.maps.Marker({
+          position: new google.maps.LatLng(
+            data[0].gps.lat + newGPS.z,
+            data[0].gps.lon + newGPS.x
+          ),
+        });
+      }
+    }
     markers.push(marker);
     marker.setMap(map); //찍는건데
   }
@@ -66,7 +87,10 @@ socket.on("sendMarkers", (data) => {
   }
   lines = [];
   for (let i = 0; i < data.length; i++) {
-    lines.push(new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon));
+    // lines.push(new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon));
+    lines.push(
+      new google.maps.LatLng(gps.lat + locals[i].z, gps.lon + locals[i].x)
+    );
   }
 
   if (lines.length == 2) {
@@ -79,8 +103,11 @@ socket.on("sendMarkers", (data) => {
     });
     drawingManager.setMap(map);
 
-    const sideLat = (data[0].gps.lat + data[1].gps.lat) / 2;
-    const sideLon = (data[0].gps.lon + data[1].gps.lon) / 2;
+    //가운데 마커찍는 곳
+    // const sideLat = (data[0].gps.lat + data[1].gps.lat) / 2;
+    // const sideLon = (data[0].gps.lon + data[1].gps.lon) / 2;
+    const sideLat = gps.lat + locals[1].z / 2;
+    const sideLon = gps.lon + locals[1].x / 2;
     marker = new google.maps.Marker({
       position: new google.maps.LatLng(sideLat, sideLon),
     });
@@ -95,4 +122,17 @@ socket.on("sendMarkers", (data) => {
 function init() {
   //setInterval(getGPS, 1000);
   getGPS();
+}
+
+function GPS2Local(pGps) {
+  locals[0] = { x: 0, z: 0 };
+  const lat = pGps.lat;
+  const lon = pGps.lon;
+
+  const localLat = lat - gps.lat;
+  const localLon = lon - gps.lon;
+
+  locals[1] = { x: localLon, z: localLat };
+  returnVal = { x: localLon, z: localLat };
+  return returnVal;
 }

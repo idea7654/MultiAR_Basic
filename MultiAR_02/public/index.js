@@ -1,11 +1,10 @@
 let map;
 let marker;
-const socket = io.connect("https://gamedata.pcu.ac.kr:49155");
+const socket = io.connect("https://gamedata.pcu.ac.kr:49156");
 // const socket = io.connect("http://127.0.0.1:8500");
 let markers = [];
 let lines = [];
 let drawingManager = null;
-let sideMarker = null;
 
 let gps;
 let watch;
@@ -41,6 +40,20 @@ function initMap() {
     center: { lat: 36.317623, lng: 127.367725 },
     zoom: 18,
   });
+
+  // let polygons = [
+  //   new google.maps.LatLng(36.317658, 127.367774),
+  //   new google.maps.LatLng(36.317613, 127.370533),
+  // ];
+
+  // const drawingManager = new google.maps.Polyline({
+  //   path: polygons,
+  //   geodesic: true,
+  //   strokeColor: "#FF0000",
+  //   strokeOpacity: 1.0,
+  //   strokeWeight: 2,
+  // });
+  // drawingManager.setMap(map);
 }
 
 // let markers = [];
@@ -67,6 +80,7 @@ socket.on("sendMarkers", (data) => {
     lines.push(new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon));
   }
 
+  console.log(lines);
   if (lines.length == 2) {
     drawingManager = new google.maps.Polyline({
       path: lines,
@@ -76,14 +90,6 @@ socket.on("sendMarkers", (data) => {
       strokeWeight: 2,
     });
     drawingManager.setMap(map);
-
-    const sideLat = (data[0].gps.lat + data[1].gps.lat) / 2;
-    const sideLon = (data[0].gps.lon + data[1].gps.lon) / 2;
-    marker = new google.maps.Marker({
-      position: new google.maps.LatLng(sideLat, sideLon),
-    });
-    markers.push(marker);
-    marker.setMap(map);
   }
 });
 

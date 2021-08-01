@@ -24,12 +24,12 @@ const io = require("socket.io")(server, {
   },
 });
 
-let markers = [];
+let markers = [{ id: 0, gps: { lat: 36.317658, lon: 127.367774 } }];
 
 io.on("connection", (socket) => {
   socket.on("sendGPS", (data) => {
     const isUser = markers.findIndex((i) => i.id == data.id);
-    if (isUser == -1 && markers.length < 3) {
+    if (isUser == -1 && markers.length < 2) {
       markers.push(data);
     } else {
       markers[isUser] = data;
