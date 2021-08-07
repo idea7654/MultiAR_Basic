@@ -1,6 +1,6 @@
 let map;
 //let marker;
-const socket = io.connect("https://gamedata.pcu.ac.kr:49157");
+const socket = io.connect("https://gamedata.pcu.ac.kr:49158");
 // const socket = io.connect("http://127.0.0.1:8500");
 let markers = [];
 let lines = [];
@@ -51,18 +51,23 @@ function initMap() {
 socket.on("sendMarkers", (data) => {
   if (markers) {
     for (let i = 0; i < markers.length; i++) {
-      markers[i].setMap(null);
+      markers[i].setMap(null); //마커랑 라인 지우는 역할
     }
   }
   for (let i = 0; i < data.length; i++) {
-    let marker;
+    let marker; //data = [2]
     if (data[i].id == socket.id) {
+      //const image =
+      //("https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png");
       marker = new google.maps.Marker({
         position: new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon),
+        //icon: image,
       }); //marker변수에 마커 객체를 할당하는건데
     } else {
-      const newGPS = GPS2Local(data[i].gps);
+      //상대방꺼
+      const newGPS = GPS2Local(data[i].gps); //상대좌표
       if (i == 0) {
+        //상대방이 0번인덱스고, 내가 1번인덱스일때
         marker = new google.maps.Marker({
           position: new google.maps.LatLng(
             data[1].gps.lat + newGPS.z,
@@ -70,6 +75,7 @@ socket.on("sendMarkers", (data) => {
           ),
         });
       } else {
+        //상대방이 1번인덱스고, 내가 0번인덱스일때
         marker = new google.maps.Marker({
           position: new google.maps.LatLng(
             data[0].gps.lat + newGPS.z,
@@ -78,8 +84,9 @@ socket.on("sendMarkers", (data) => {
         });
       }
     }
-    markers.push(marker);
+    markers.push(marker); //length = 2
     marker.setMap(map); //찍는건데
+    //webxr->
   }
 
   if (lines.length >= 2) {
@@ -91,6 +98,8 @@ socket.on("sendMarkers", (data) => {
     lines.push(
       new google.maps.LatLng(gps.lat + locals[i].z, gps.lon + locals[i].x)
     );
+    //gps -> 자신의 gps(절대좌표)
+    //locals[2] -> 0번재는 0,0 이고 1번째는 상대방의 상대좌표
   }
 
   if (lines.length == 2) {
