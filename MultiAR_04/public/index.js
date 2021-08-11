@@ -1,6 +1,6 @@
 let map;
 //let marker;
-const socket = io.connect("https://gamedata.pcu.ac.kr:49158");
+const socket = io.connect("https://gamedata.pcu.ac.kr:49153");
 // const socket = io.connect("http://127.0.0.1:8500");
 let markers = [];
 let lines = [];

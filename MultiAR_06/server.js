@@ -1,7 +1,12 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-
+const https = require("https");
+const fs = require("fs");
+const options = {
+  key: fs.readFileSync("./privkey.pem"),
+  cert: fs.readFileSync("./cert.pem"),
+};
 const Major = [
   { name: "기독교사회복지학과", BuiltNum: 6 },
   { name: "국어국문한국어교육학과", BuiltNum: 18 },
@@ -83,4 +88,4 @@ app.get("/major/:id", (req, res) => {
   res.send(Built[builtNum]);
 });
 
-app.listen(3000);
+const server = https.createServer(options, app).listen(9000);

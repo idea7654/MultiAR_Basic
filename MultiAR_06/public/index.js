@@ -175,52 +175,68 @@ function getGPS() {
   window.addEventListener("deviceorientationabsolute", handleMotion, true);
   function success(position) {
     gps = {
-      lat: position.coords.latitude,
-      lon: position.coords.longitude,
+      //lat: position.coords.latitude,
+      //lon: position.coords.longitude,
+      lat: 36.317563,
+      lon: 127.367723,
     };
+    if (builtInfo) {
+      const dlat = builtInfo.lat - gps.lat;
+      const dlon = builtInfo.lon - gps.lon;
 
-    const dlat = builtInfo.lat - gps.lat;
-    const dlon = builtInfo.lon - gps.lon;
+      const distance = Math.sqrt(dlat * dlat + dlon * dlon);
 
-    const distance = Math.sqrt(dlat * dlat + dlon * dlon);
-    const angle = (Math.atan2(dlat, dlon) * 180) / Math.PI;
-    let realAngle = 0;
-    if (angle < 0) {
-      realAngle = 360 - compassDegree - 20 + 360 + angle;
-    } else {
-      realAngle = 360 - compassDegree - 20 + angle;
-    }
-    if (realAngle > 360) {
-      realAngle -= 360;
-    }
-    realAngle -= 180;
+      const y = Math.sin(dlon) * Math.cos(builtInfo.lat);
+      const x =
+        Math.cos(gps.lat) * Math.sin(builtInfo.lat) -
+        Math.sin(gps.lat) * Math.cos(builtInfo.lat) * Math.cos(dlon);
+      //const angle = (Math.atan2(dlon, dlat) * 180) / Math.PI;
+      const angle = (Math.atan2(y, x) * 180) / Math.PI;
+      let realAngle = 0;
+      if (angle < 0) {
+        realAngle = 360 - compassDegree - 20 + 360 + angle;
+      } else {
+        realAngle = 360 - compassDegree - 20 + angle;
+      }
+      if (realAngle > 360) {
+        realAngle -= 360;
+      }
+      if (realAngle > 180) {
+        realAngle -= 360;
+      }
 
-    if (model) {
-      model.position.set(0, -0.5, -3).applyMatrix4(controller.matrixWorld);
-      model.quaternion.setFromRotationMatrix(controller.matrixWorld);
-      model.rotateX(Math.PI);
-      const pivotClone = pivot.clone();
-      // const canvas1 = document.createElement("canvas");
-      // const context1 = canvas1.getContext("2d");
-      //context1.font = "Bold 10px Arial";
-      //context1.fillStyle = "rgba(0, 0, 0, 1)";
-      //context1.fillText(data.name, 0, 60);
+      //realAngle -= 180;
+      if (model && pivot) {
+        model.position.set(0, -0.5, -1).applyMatrix4(controller.matrixWorld);
+        model.quaternion.setFromRotationMatrix(controller.matrixWorld);
+        model.rotateX(Math.PI);
+        const pivotClone = pivot.clone();
+        const canvas1 = document.createElement("canvas");
+        const context1 = canvas1.getContext("2d");
+        context1.font = "Bold 10px Arial";
+        context1.fillStyle = "rgba(0, 0, 0, 1)";
+        context1.fillText(
+          `${compassDegree}, ${Math.ceil(realAngle)}, ${Math.ceil(angle)}`,
+          0,
+          60
+        );
 
-      // const texture1 = new THREE.Texture(canvas1);
-      // texture1.needsUpdate = true;
-      // const material1 = new THREE.MeshBasicMaterial({
-      //   map: texture1,
-      //   side: THREE.DoubleSide,
-      // });
-      // material1.transparent = true;
+        const texture1 = new THREE.Texture(canvas1);
+        texture1.needsUpdate = true;
+        const material1 = new THREE.MeshBasicMaterial({
+          map: texture1,
+          side: THREE.DoubleSide,
+        });
+        material1.transparent = true;
 
-      // const mesh1 = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material1);
-      // mesh1.position.set(0.5, -0.3, -2).applyMatrix4(controller.matrixWorld);
-      // mesh1.quaternion.setFromRotationMatrix(controller.matrixWorld);
-      // pivotClone.add(mesh1);
-      pivotClone.rotateY((realAngle * Math.PI) / 180);
-      scene.add(pivotClone);
-      navigator.geolocation.clearWatch(watch);
+        const mesh1 = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material1);
+        mesh1.position.set(0.5, -0.3, -3).applyMatrix4(controller.matrixWorld);
+        mesh1.quaternion.setFromRotationMatrix(controller.matrixWorld);
+        pivotClone.add(mesh1);
+        pivotClone.rotateY((realAngle * Math.PI) / 180);
+        scene.add(pivotClone);
+        navigator.geolocation.clearWatch(watch);
+      }
     }
   }
 
@@ -239,9 +255,9 @@ function handleMotion(event) {
   const compass = event.webkitCompassHeading || Math.abs(event.alpha - 360);
   compassDegree = Math.ceil(compass);
   //    navigator.geolocation.clearWatch(watch);
-  //const div = document.getElementById("artInfo");
-  //div.style.visibility = "visible";
-  //div.innerHTML = `gyro: ${compassDegree}`;
+  //   const div = document.getElementById("artInfo");
+  //   div.style.visibility = "visible";
+  //   div.innerHTML = `gyro: ${compassDegree}`;
 }
 
 function updateAnimation() {
@@ -271,7 +287,7 @@ checkXR(); //브라우저가 로딩되면 checkXR을 실행
 getGPS();
 
 document.getElementById("built_p").addEventListener("click", () => {
-  axios.get("http://127.0.0.1:3000/built/0").then((res) => {
+  axios.get("https://gamedata.pcu.ac.kr:9000/built/0").then((res) => {
     //console.log(res.data);
     builtInfo = res.data;
     document.getElementById("overlay").style.visibility = "visible";
@@ -282,7 +298,7 @@ document.getElementById("built_p").addEventListener("click", () => {
 });
 
 document.getElementById("built_c").addEventListener("click", () => {
-  axios.get("http://127.0.0.1:3000/built/24").then((res) => {
+  axios.get("https://gamedata.pcu.ac.kr:9000/built/24").then((res) => {
     // console.log(res.data);
     builtInfo = res.data;
     document.getElementById("overlay").style.visibility = "visible";
@@ -293,7 +309,7 @@ document.getElementById("built_c").addEventListener("click", () => {
 });
 
 document.getElementById("major_japan").addEventListener("click", () => {
-  axios.get("http://127.0.0.1:3000/major/3").then((res) => {
+  axios.get("https://gamedata.pcu.ac.kr:9000/major/3").then((res) => {
     // console.log(res.data);
     builtInfo = res.data;
     document.getElementById("overlay").style.visibility = "visible";
@@ -304,7 +320,7 @@ document.getElementById("major_japan").addEventListener("click", () => {
 });
 
 document.getElementById("major_game").addEventListener("click", () => {
-  axios.get("http://127.0.0.1:3000/major/27").then((res) => {
+  axios.get("https://gamedata.pcu.ac.kr:9000/major/27").then((res) => {
     //console.log(res.data);
     builtInfo = res.data;
     document.getElementById("overlay").style.visibility = "visible";
