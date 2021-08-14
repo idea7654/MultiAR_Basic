@@ -97,6 +97,6 @@ socket.on("sendMarkers", (data) => {
 // getGPS();
 
 function init() {
-  setInterval(getGPS, 1000);
-  // getGPS
+  // setInterval(getGPS, 1000);
+  getGPS();
 }
