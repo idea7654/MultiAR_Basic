@@ -24,7 +24,7 @@ const io = require("socket.io")(server, {
   },
 });
 
-let markers = [{ id: 0, gps: { lat: 36.317658, lon: 127.367774 } }];
+var markers = [{ id: 0, gps: { lat: 36.317658, lon: 127.367774 } }];
 
 io.on("connection", (socket) => {
   socket.on("sendGPS", (data) => {
@@ -34,6 +34,7 @@ io.on("connection", (socket) => {
     } else {
       markers[isUser] = data;
     }
+    console.log(markers);
     io.emit("sendMarkers", markers);
   });
 

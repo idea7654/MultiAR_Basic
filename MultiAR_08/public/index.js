@@ -187,6 +187,7 @@ const handleOrientation = (event) => {
 };
 
 function getRealAngle(heading, angle) {
+  //compassDegree, 역탄젠트값(절대각도)
   let realAngle = 0;
   if (angle < 0) {
     realAngle = 360 - heading + 360 + angle;

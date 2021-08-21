@@ -1,6 +1,6 @@
 let map;
 //let marker;
-const socket = io.connect("https://gamedata.pcu.ac.kr:49153");
+const socket = io.connect("https://gamedata.pcu.ac.kr:49155");
 // const socket = io.connect("http://127.0.0.1:8500");
 let markers = [];
 let lines = [];
@@ -22,6 +22,11 @@ function getGPS() {
       id: socket.id,
       gps: gps,
     });
+    // socket.emit("sendGPS", {
+    //   id: socket.id,
+    //   lat: gps.lat,
+    //   lon: gps.lon,
+    // });
     // console.log(watch);
   }
 
@@ -43,11 +48,10 @@ function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 36.317623, lng: 127.367725 },
     zoom: 18,
-    heading: 320,
+    heading: 91,
     tilt: 0,
     mapId: "d92c89799965a9e5",
   });
-  map.setHeading(map.getHeading() + 90);
 }
 
 // let markers = [];
@@ -97,13 +101,15 @@ socket.on("sendMarkers", (data) => {
     drawingManager.setMap(null);
   }
   lines = [];
-  for (let i = 0; i < data.length; i++) {
-    // lines.push(new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon));
-    lines.push(
-      new google.maps.LatLng(gps.lat + locals[i].z, gps.lon + locals[i].x)
-    );
-    //gps -> 자신의 gps(절대좌표)
-    //locals[2] -> 0번재는 0,0 이고 1번째는 상대방의 상대좌표
+  if (locals.length > 0) {
+    for (let i = 0; i < data.length; i++) {
+      // lines.push(new google.maps.LatLng(data[i].gps.lat, data[i].gps.lon));
+      lines.push(
+        new google.maps.LatLng(gps.lat + locals[i].z, gps.lon + locals[i].x)
+      );
+      //gps -> 자신의 gps(절대좌표)
+      //locals[2] -> 0번재는 0,0 이고 1번째는 상대방의 상대좌표
+    }
   }
 
   if (lines.length == 2) {
