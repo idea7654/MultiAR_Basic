@@ -8,8 +8,12 @@ let locals = [];
 let drawingManager = null;
 let sideMarker = null;
 
+let builtInfo = null;
+
 let gps;
 let watch;
+const image =
+  "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png";
 
 function getGPS() {
   function success(position) {
@@ -18,11 +22,51 @@ function getGPS() {
       lon: position.coords.longitude,
     };
 
-    socket.emit("sendGPS", {
-      id: socket.id,
-      gps: gps,
+    if (markers) {
+      for (let i = 0; i < markers.length; i++) {
+        markers[i].setMap(null); //마커랑 라인 지우는 역할
+      }
+    }
+
+    marker = new google.maps.Marker({
+      position: new google.maps.LatLng(gps.lat, gps.lon),
+      // icon: image,
+    }); //marker변수에 마커 객체를 할당하는건데
+    markers.push(marker);
+    marker.setMap(map);
+
+    if (builtInfo) {
+      marker = new google.maps.Marker({
+        position: new google.maps.LatLng(builtInfo.lat, builtInfo.lon),
+        icon: image,
+      });
+      markers.push(marker);
+      marker.setMap(map);
+    }
+
+    if (lines.length >= 2) {
+      drawingManager.setMap(null);
+    }
+    lines = [];
+    lines.push(new google.maps.LatLng(gps.lat, gps.lon));
+    lines.push(new google.maps.LatLng(builtInfo.lat, builtInfo.lon));
+
+    drawingManager = new google.maps.Polyline({
+      path: lines,
+      geodesic: true,
+      strokeColor: "#FF0000",
+      strokeOpacity: 1.0,
+      strokeWeight: 2,
     });
-    // console.log(watch);
+    drawingManager.setMap(map);
+    const dx = builtInfo.lon - gps.lon;
+    const dy = builtInfo.lat - gps.lat;
+    const zoomSize = Math.floor(
+      Math.floor(Math.sqrt(dx * dx + dy + dy) * 11000) / 250
+    );
+    const pt = new google.maps.LatLng(gps.lat, gps.lon);
+    map.setCenter(pt);
+    map.setZoom(20 - zoomSize);
   }
 
   function error() {
@@ -42,7 +86,7 @@ function getGPS() {
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: 36.317623, lng: 127.367725 },
-    zoom: 18,
+    zoom: 15,
     heading: 0,
     tilt: 0,
     mapId: "d92c89799965a9e5",
@@ -142,6 +186,53 @@ function init() {
   getGPS();
   //document.getElementById("compass").innerHTML = `하이`;
   window.addEventListener("deviceorientation", handleOrientation, false);
+  document.getElementById("built_p").addEventListener("click", () => {
+    axios.get("https://gamedata.pcu.ac.kr:49155/built/0").then((res) => {
+      //console.log(res.data);
+      builtInfo = res.data;
+      // document.getElementById("result").innerHTML = document.getElementById(
+      //   "built_p"
+      // ).text;
+      document.getElementById("select").style.display = "none";
+      document.getElementById("map").style.display = "block";
+    });
+  });
+
+  document.getElementById("built_c").addEventListener("click", () => {
+    axios.get("https://gamedata.pcu.ac.kr:49155/built/24").then((res) => {
+      // console.log(res.data);
+      builtInfo = res.data;
+      // document.getElementById("result").innerHTML = document.getElementById(
+      //   "built_c"
+      // ).text;
+      document.getElementById("select").style.display = "none";
+      document.getElementById("map").style.display = "block";
+    });
+  });
+
+  document.getElementById("major_japan").addEventListener("click", () => {
+    axios.get("https://gamedata.pcu.ac.kr:49155/major/3").then((res) => {
+      // console.log(res.data);
+      builtInfo = res.data;
+      // document.getElementById("result").innerHTML = document.getElementById(
+      //   "major_japan"
+      // ).text;
+      document.getElementById("select").style.display = "none";
+      document.getElementById("map").style.display = "block";
+    });
+  });
+
+  document.getElementById("major_game").addEventListener("click", () => {
+    axios.get("https://gamedata.pcu.ac.kr:49155/major/27").then((res) => {
+      //console.log(res.data);
+      builtInfo = res.data;
+      // document.getElementById("result").innerHTML = document.getElementById(
+      //   "major_game"
+      // ).text;
+      document.getElementById("select").style.display = "none";
+      document.getElementById("map").style.display = "block";
+    });
+  });
 }
 
 function GPS2Local(pGps) {

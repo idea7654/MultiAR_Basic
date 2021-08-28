@@ -10,18 +10,6 @@ const options = {
 const cookieParser = require("cookie-parser");
 
 var markers = [];
-var marker = { id: null, gps: { lat: null, lon: null } };
-marker = {
-  id: "yfkgj",
-  gps: { lat: 36.32194760415595, lon: 127.36717672654622 },
-};
-markers.push(marker);
-// const count = markers.push({
-//   id: "yfkgj",
-//   lat: 36.32194760415595,
-//   lon: 127.36717672654622,
-// }); //p관
-// console.log(count);
 
 app.use(cors({ credentials: true }));
 
@@ -39,12 +27,11 @@ const io = require("socket.io")(server, {
 });
 
 io.on("connection", (socket) => {
+  console.log(markers);
   socket.on("sendGPS", (data) => {
     const isUser = markers.findIndex((i) => i.id == data.id);
     if (isUser == -1 && markers.length < 2) {
       markers.push(data);
-      //console.log(markers);
-      console.log(markers);
     } else {
       markers[isUser] = data;
     }
@@ -55,7 +42,9 @@ io.on("connection", (socket) => {
     //디스커넥트...
     //io.emit()
     const index = markers.findIndex((i) => i.id == socket.id);
-    markers.splice(index, 1);
-    io.emit("sendMarkers", markers);
+    if (index != -1) {
+      markers.splice(index, 1);
+      io.emit("sendMarkers", markers);
+    }
   });
 });
