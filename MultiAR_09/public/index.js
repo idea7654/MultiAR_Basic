@@ -48,25 +48,27 @@ function getGPS() {
       drawingManager.setMap(null);
     }
     lines = [];
-    lines.push(new google.maps.LatLng(gps.lat, gps.lon));
-    lines.push(new google.maps.LatLng(builtInfo.lat, builtInfo.lon));
+    if (builtInfo) {
+      lines.push(new google.maps.LatLng(gps.lat, gps.lon));
+      lines.push(new google.maps.LatLng(builtInfo.lat, builtInfo.lon));
 
-    drawingManager = new google.maps.Polyline({
-      path: lines,
-      geodesic: true,
-      strokeColor: "#FF0000",
-      strokeOpacity: 1.0,
-      strokeWeight: 2,
-    });
-    drawingManager.setMap(map);
-    const dx = builtInfo.lon - gps.lon;
-    const dy = builtInfo.lat - gps.lat;
-    const zoomSize = Math.floor(
-      Math.floor(Math.sqrt(dx * dx + dy + dy) * 11000) / 250
-    );
-    const pt = new google.maps.LatLng(gps.lat, gps.lon);
-    map.setCenter(pt);
-    map.setZoom(20 - zoomSize);
+      drawingManager = new google.maps.Polyline({
+        path: lines,
+        geodesic: true,
+        strokeColor: "#FF0000",
+        strokeOpacity: 1.0,
+        strokeWeight: 2,
+      });
+      drawingManager.setMap(map);
+      const dx = builtInfo.lon - gps.lon;
+      const dy = builtInfo.lat - gps.lat;
+      const zoomSize = Math.floor(
+        Math.floor(Math.sqrt(dx * dx + dy + dy) * 11000) / 250
+      );
+      const pt = new google.maps.LatLng(gps.lat, gps.lon);
+      map.setCenter(pt);
+      map.setZoom(20 - zoomSize);
+    }
   }
 
   function error() {
@@ -185,7 +187,11 @@ function init() {
   //setInterval(getGPS, 1000);
   getGPS();
   //document.getElementById("compass").innerHTML = `하이`;
-  window.addEventListener("deviceorientation", handleOrientation, false);
+  window.addEventListener(
+    "deviceorientationabsolute",
+    handleOrientation,
+    false
+  );
   document.getElementById("built_p").addEventListener("click", () => {
     axios.get("https://gamedata.pcu.ac.kr:49155/built/0").then((res) => {
       //console.log(res.data);
@@ -257,8 +263,8 @@ const handleOrientation = (event) => {
     // some devices don't understand "alpha" (especially IOS devices)
     heading = event.webkitCompassHeading;
   } else {
-    heading = compassHeading(event.alpha, event.beta, event.gamma);
-    // heading = event.alpha;
+    // heading = compassHeading(event.alpha, event.beta, event.gamma);
+    heading = 360 - event.alpha;
   }
   if (map) {
     map.setHeading(heading);
@@ -277,7 +283,10 @@ const handleOrientation = (event) => {
     )}, 계산한 각도: ${result}, angle: ${angle}`;
   }
 };
-
+//absolute, 일반 비교테스트 프로그램
+//Compass
+//네비게이션 모듈
+//csv, 위치별로 분기
 function getRealAngle(heading, angle) {
   //compassDegree, 역탄젠트값(절대각도)
   let realAngle = 0;
@@ -299,7 +308,7 @@ function getRealAngle(heading, angle) {
 const compassHeading = (alpha, beta, gamma) => {
   // Convert degrees to radians
   const alphaRad = alpha * (Math.PI / 180);
-  const betaRad = beta * (Math.PI / 180);
+  const betaRad = -beta * (Math.PI / 180);
   const gammaRad = gamma * (Math.PI / 180);
 
   // Calculate equation components
@@ -310,7 +319,7 @@ const compassHeading = (alpha, beta, gamma) => {
   const cG = Math.cos(gammaRad);
   const sG = Math.sin(gammaRad);
 
-  // Calculate A, B, C rotation components
+  // Calculate A, B, C rotation componentsß
   const rA = -cA * sG - sA * sB * cG;
   const rB = -sA * sG + cA * sB * cG;
   const rC = -cB * cG;
